@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+	<title>OCaml Lecture Notes</title>
+	<link rel="stylesheet" href="../bootstrap-3.3.7-dist/css/bootstrap.min.css">
+</head>
+<body>
+<xmp>
+
+(* module *)
+
+module type FOO =
+  sig
+    val add : int -> int -> int
+   (* val mult : int -> int -> int*)
+  end;;
+  
+  
+  
+module Foo : FOO =
+  struct
+    let add x y = x + y
+    let mult x y = x * y
+  end;;
+Foo.add 3 4;;    (* OK *)
+Foo.mult 3 4;;   (* not accessible *)
+
+
+
+
+module type SHAPES =
+  sig
+    type shape  (*hides the representation *)
+    val area : shape -> float
+    val make_circle : float -> shape
+    val make_rect : float -> float -> shape
+    (* hides the unit_circle definition *)
+end;;
+
+module Shapes : SHAPES = 
+  struct
+    type shape =
+       Rect of float * float (* wid*len *)
+     | Circle of float       (* radius  *)
+
+    let area = function
+       Rect (w, l) -> w *. l
+     | Circle r -> r  *. r *. 3.14
+
+    let unit_circle = Circle 1.0
+    let make_circle rad = Circle(rad)
+    let make_rect wid len = Rect(wid, len)
+  end;;
+
+(* Shapes.unit_circle;; (* fails *) *)
+(* Shapes.area (Shapes.Rect (3.0, 4.0));; (* fails *) *)
+Shapes.area (Shapes.make_rect 3.0 4.0);;
+
+
+
+(* Fraction module example. See the fraction_module and fraction_module_sig files *)
+
+(* ref *)
+
+let new_counter () = 
+  let next = let count = ref 0 in
+	     function () ->
+	       let curr = !count in
+	       incr count;
+	       curr
+  in
+  next
+
+let c1 = new_counter ();;
+let c2 = new_counter ();;
+let x = c1 ();; (* x = 0 *)
+let y = c1 ();; (* y = 1 *)
+let z = c2 ();; (* z = 0 *)
+
+
+
+(* exception *)
+
+exception Error of int
+
+(*let div x y = if y=0 then raise (Error 99) else x / y;; *)
+let div x y =  x / y;;
+	
+let my_fun() =
+	let s = try
+			div (int_of_string Sys.argv.(1)) (int_of_string Sys.argv.(2))
+			with 
+			|Error x->x
+			|Invalid_argument("index out of bounds") -> 200 (* "index out of bounds" *)
+			|Division_by_zero ->100
+			(*in print_string (s^"\n");;*)
+			in print_int s; print_string "\n";;
+
+
+my_fun();;
+
+
+
+
+let f n = try 100 / n with Division_by_zero -> 69;;
+
+
+exception EmptyList
+let hd l = 
+match l with 
+[]->raise EmptyList
+|h::_-> h
+;;
+
+
+let get_head l=
+	try hd l with EmptyList->99
+;;
+	
+let f = get_head [1;2;3];; (* returns 1*)
+let g = get_head [];; (* returns 99*)
+
+print_int f;;
+print_newline();;
+
+print_int g;;
+print_newline();;
+
+
+(*  imperative OCaml *)
+
+let t = ref 0;;
+
+t := 100;;  (* assgin *)
+let x = !t;; (* read t *)
+
+t := !t +1;;
+
+
+
+let next =
+  let _= print_string "creating the closure\n" in
+  let count = ref 0 in
+  fun x->match x with
+           ()->
+           let _= print_string "counting\n" in
+           let t = !count in  count:= !count +1; t
+;;
+
+
+(* binding a variable to an anounymous function *)
+let a = let y = 10 in fun x ->x*y;;
+	
+	</xmp>
+<script src="../js/strapdown.js"></script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>

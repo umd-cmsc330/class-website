@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=windows-1252">
+	<title>CMSC330 Enviroment Setup</title>
+</head>
+<body>
+	<em>This guide assumes you have Ruby running on your machine.<br>Each line is a seperate command.</em>
+
+	<h3>OCaml Installation:</h3>
+	<li>Please read carefully the instructions before excuting the commands:</p>
+	<ol>
+		<li>Get the brew package manager:</li>
+		<ul>
+			<li>Linux/C9.io: </li>
+			<code>ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install)"</code>
+			<br>
+			<code>PATH="$HOME/.linuxbrew/bin:$PATH"</code>
+			<br>
+			<code>echo 'export PATH="$HOME/.linuxbrew/bin:$PATH"' &gt;&gt;~/.bash_profile</code>
+			<li>Mac: </li>
+			<code>ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"</code>
+		</ul>
+
+		<li>Install Ocaml(4-6 min): </li>
+		<code>brew install ocaml</code>
+
+		<li>Install OPAM(1-2 min): </li>
+		<code>brew install opam</code>
+
+		<li>Initialize OPAM</li>
+		<code>opam init</code>
+
+		<li>Configure your .bashsrc (THESE ARE BACK TICKS): </li>
+		<code>eval `opam config env`</code>
+
+		<li>Install Ocamlfind and when prompted hit 'y' (without the quotes):</li>
+		<code>opam install ocamlfind</code>
+
+		<li>Install oUnit and when prompted hit 'y' (without the quotes):</li>
+		<code>opam install ounit</code>
+
+		<li>Navigate into the project folder:</li>
+		<code>cd project_directory</code>
+
+		<li>You are ready to hit make:</li>
+		<code>make</code>
+
+		<li>Now run the tests:</li>
+		<code>./public.native</code>
+	</ol>
+
+
+</body></html>

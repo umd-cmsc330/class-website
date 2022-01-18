@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Ruby Lecture 1 </title>
+	<link rel="stylesheet" href="../js/bootstrap.min.css">
+</head>
+<body>
+
+<xmp>
+
+
+## Lecture 1   Ruby
+
+## classes abd Objects
+
+### How to execute Ruby Program
+- Use the ruby interpreter
+ `ruby -w example.rb`
+- Use the interactive shell
+ `irb`		quit/exit to stop
+- Eclipse Ruby plugin
+- Add #! /bin/ruby to the ruby program and change mode to executable
+ `chmod a+x x.rb`
+
+
+### Editor
+	Any text editor is good. We use Emacs in class
+
+	
+### Ruby classes
+
+Everything is an object in Ruby. Every variable is a reference to an object.
+	
+	1.class
+	=> Integer
+	
+
+1 is an instance of the Integer class
+
+	1473638940575746746362202020.class
+	=> Integer
+	
+1473638940575746746362202020 is an Integer
+
+	"hello".class
+	=> String	
+"hello" is a String object.
+	
+	true.class
+		=> TrueClass
+	false.class
+		=> FalseClass
+	nil.class
+		=> NilClass
+
+	
+	nil.nil?
+		=> true
+
+	
+nil.nil? returns true. nil is an object and it has a method nil?
+
+	0.nil?
+		=> false
+	
+
+0.nil?	returns false because 0 is not nil.
+	
+Fun story: Jennifer Null BBC story
+
+	In Ruby,  only false and nil are false. Everything is not false. 0 is not false
+	
+###Classes are objects too.
+	1.class.class
+		=> Class
+
+The class of Class is Class.
+	
+	1.class.superclass
+		=> Numeric
+
+Super class of Integer is Numeric. All the ancestors of Integer
+	1.class.ancestors
+		=> [Integer, Numeric, Comparable, Object, Kernel, BasicObject]
+	
+	1.class.ancestors			#[Integer, Numeric, Comparable, Object, Kernel, BasicObject]
+	
+Object is the superclass of every class. 
+
+	self.class
+		=> Object
+
+irb top level is an object of Object
+
+top level functions are added to Object class
+	
+	def foo
+		"CMSC330 Fall 2017"
+	end
+	
+self.methods will list the method "anwar". Now, all ruby objects will have a method "foo".
+	
+	1.foo
+		=> "CMSC330 Fall 2017"
+
+	nil.foo
+		=> "CMSC330 Fall 2017"
+	
+We can dynamically add methods to existing classes
+
+	1.double
+		NoMethodError: undefined method `double' for 1:Integer	
+Integer does not have a method called "double". Now, we can add it.
+	
+	class Integer
+		def double
+			self + self
+		end
+	end
+	
+Now, all old and new objects of Integer class have a method "double"
+	
+	10.double
+		=> 20
+
+	
+We can also remove methods from classes too
+	
+	remove_method :method_name
+removes the method from child. Parent classes will still have the method.
+
+	class Integer
+		remove_method :to_s
+	end	
+Integer class' to_s method is deleted.  But Ruby still searches for the "to_s" from paretns and mixins.	
+
+	1.to_s
+		=> "\#< Integer:0x00000000000003 >" 
+For Integer objects, to_s of Object is called.
+	
+	class Integer
+		remove_method :double
+	end
+The method "double" is removed from Integer class.
+						
+	undef_method :method_name
+
+prevents current class from responding any calls to :method_name. It undefines a method from a class and superclasses
+
+	1.object_id
+		=> 3
+
+	class Integer
+		undef_method :object_id
+	end
+	warning: undefining 'object_id' may cause serious problems	
+			
+	1.object_id
+		NoMethodError: undefined method 'object_id' for 1:Integer
+
+	
+	
+Another example:
+
+	1.size
+		=> 8
+	
+	class Integer
+		undef_method:size
+	end
+	
+	1.size
+		NoMethodError: undefined method 'size' for 1:Integer
+	
+	
+quitting irb and start again will fix the problem
+
+We can even redefine existing methods
+	
+	class Integer 
+		def +(a)
+			1			
+		end
+	end
+All integer additions return 1
+
+	10+20
+		=> 1
+
+10+20 returns 1. This may break irb, because irb is written in Ruby.
+	
+	
+remove_method and undef_method example:
+	
+	class Parent
+  		def hello
+    		puts "In parent"
+  		end
+	end
+	class Child &lt; Parent
+  		def hello
+    		puts "In child"
+  		end
+	end
+
+	c = Child.new
+	c.hello
+
+	class Child
+  		remove_method :hello  # remove from child, still in parent
+	end
+	c.hello			#returns In parent
+
+	class Child
+  		undef_method :hello   # prevent any calls to 'hello'
+	end
+	
+	c.hello			#undefined method `hello'
+	
+	
+	
+
+#Defining classes
+
+	class class_name
+		...
+	end
+	
+Let us define a class Hello with one method.
+
+	class Hello
+	  	def my_first_method
+    		puts "Hello, World!"
+  		end
+	end
+
+	x = Hello.new
+	x.my_first_method
+returns
+	
+		Hello, World!
+		=> nil
+=> nil is the outpus of puts.
+
+A class example
+
+	class Point
+      def x=(x)			#setX method
+           @x = x
+      end
+    
+      def x				#getX method
+      	  @x
+      end
+      def y=(y)
+           @y = y
+      end
+    
+      def y
+      	  @y
+      end
+      # make the method prt private
+      private
+      def prt
+      	  "(#{@x}, #{@y})"
+      end
+      #Make the below methods public
+      public 
+      def to_s
+      	  prt
+      end
+	end
+
+
+In Point class, x= and y= are getters and x and y are setters.
+	
+	p = Point.new
+	p.x= 100		# p.x = 100 is a syntactic sugar
+	p.y = 200
+	puts p.inspect
+	puts p
+The output:
+	
+	#<Point:0x007ffbfa10ed40 @x=100, @y=200>
+	(100, 200)
+### attr_accessor
+
+	class Point
+      attr_accessor :x, :y
+      # make the method prt private
+      private
+      def prt
+      	  "#{@x}, #{@y}"
+      end
+      #Make the below methods public
+      public 
+      def to_s
+      	  prt
+      end
+	end
+
+
+### class variables  @@variables
+
+	class Person
+		  @@count = 0
+		  def initialize(name)
+			  @name = name
+					@@count += 1
+		 end
+		 def self.count
+			 @@count
+		 end
+	end
+
+
+	p = Person.new("anwar")
+
+	Person.count	#returns 1 
+
+	p = Person.new("anwar")
+	p = Person.new("anwar")
+
+	Person.count    #returns 3
+
+
+### mixins
+ 
+- include Comparable 
+- spaceship operator <=>
+- Fraction class
+- stuff that we did not cover in class
+
+
+
+### returning self is convenient for "stringing method calls"
+
+  	class C
+	  def m1
+		print "hi "
+		self
+	  end
+	  def m2
+		print "bye "
+		self
+	  end
+	  def m3
+		print "\n"
+		self
+	  end
+	end
+
+
+	c = C.new
+	c.m1.m2.m3.m1.m1.m3
+
+Another example
+
+	class D
+	  def m1
+		@foo = 0
+	  end
+
+	  def m2 x
+		@foo += x
+	  end
+
+	  def foo
+		@foo
+	  end
+
+	end
+
+
+Example:
+
+	class E 
+	  # uses initialize method, which is better than m1
+	  # initialize can take arguments too (here providing defaults)
+	  def initialize(f=0)
+		@foo = f
+	  end
+
+	  def m2 x
+		@foo += x
+	  end
+
+	  def foo
+		@foo
+	  end
+
+	end
+
+
+
+
+### subclass overrides the method in the base class if the method name is same. 
+
+	class A
+      def m1(x)
+      	  x
+      end
+	end
+
+	class B < A
+      #m1 overrides m1 in A although they have different argument list
+      def m1(x,y)
+      	  x+y
+      end
+	end
+
+
+
+
+
+### visibility
+	private
+	ptotected
+	public
+	
+
+
+
+</xmp>
+
+<script src="../js/strapdown.js"></script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+
+</html>
+

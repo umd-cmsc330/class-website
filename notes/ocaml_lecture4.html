@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+	<title>OCaml Lecture Notes</title>
+	<link rel="stylesheet" href="../bootstrap-3.3.7-dist/css/bootstrap.min.css">
+</head>
+<body>
+<xmp>
+
+
+
+
+
+### Higher order functions
+
+What do these functions have in common?
+
+	let rec neg x =
+	  match x with
+		  [] -> []
+		| h::t -> (-h)::(neg t)
+	;;
+
+	let rec add1 x =
+	  match x with
+		  [] -> []
+		| h::t -> (h+1)::(add1 t)
+	;;
+
+They both create a new list whose elements are a function of the corresponding elements in the old list. We can write this pattern as its own function, map. 
+	
+	
+
+	let rec map f x = (* equivalent to List.map *)
+	  match x with
+		  [] -> []
+		| h::t -> (f h)::(map f t)
+	;;
+	
+
+map takes a function and a list as arguments, and generate a new list by applying the function to each memeber of the list.  map f [a;b;c;d] will generate a list [f a; f b; f c; f d]
+
+
+	let neg' x = (* the same as neg *)
+	  let negate y = -y in
+	  map negate x
+	;;
+
+	let add1' x = (* the same as add1 *)
+	  let addone y = y + 1 in
+	  map addone x;;
+
+	neg [1;2;3] = neg' [1;2;3];;
+	add1 [1;2;3] = add1' [1;2;3];;
+
+
+### More map examples
+
+	let rec map f l=match l with
+	[]->[]
+	|h::t->f h::map f t
+	;;
+
+	let double x = x * 2;;
+	let halve x = x /2;;
+
+	let lst = [10;20;30;40];;
+
+	map double lst    (*  returns [20;40;60;80] *)
+	map halve lst 	(*  returns [5;10;15;20] *)
+
+
+	let cons x ls = x::ls;;
+	map (cons 0) [[1;2]; [3;4]];;
+	(* returns [[0; 1; 2]; [0; 3; 4]]  *)
+
+
+Aother map example:
+	calculate sum of each int list in a list. 
+	
+	let rec sum lst = match lst with 
+		|[]->0
+		|h::t->h + sum t
+	;;
+
+	List.map sum [[1;2];[4;5;6]];;
+		- : int list = [3; 15]
+
+
+
+###  fold_left
+
+	let rec fold f a l =
+		match l with
+		[]->a
+		|h::t->fold f (f a h) t
+	;;
+
+
+	fold (fun x y->x+y) 0 [1;2;3;4;5];;
+	(* returns 15  *)
+
+
+	let add x y = x+y;;
+	fold add 0 [1;2;3];;
+
+
+### fold_right
+
+	let rec right_fold f lst acc =
+		match lst with
+		[]->acc
+		|h::t-> f h (right_fold f t acc)
+	;;
+
+
+
+	right_fold (-) [1;2;3] 20;;
+	 returns  int = -18
+
+	  1 - ( 2- (3-20)) = -18
+
+
+fold and map are fundamental; many functions can be built using them
+
+	let reverse ls =
+		let prepend a x = x :: a in
+		fold prepend [] ls;;
+
+	reverse [1;2;3;4];;
+
+
+
+
+ What do these functions have in common? They look similar, but there are small differences.
+
+	let rec sum x =
+	  match x with
+		  [] -> 0
+		| h::t -> h+sum t
+	;;
+
+	let rec length x =
+	  match x with
+		  [] -> 0
+		| _::t -> 1+length t
+	;;
+
+We can "abstract out" the small differences and create a function that takes them as arguments. Here, f is a function
+  that does the main work, and a is the "accumulator"
+
+	let rec fold f x a =  (* Equivalent to List.fold_right *)
+	  match x with
+		  [] -> a
+		| h::t ->
+		  let a' = fold f t a in
+		  f h a';;
+
+	let sum2 x = (* computes the same answer as sum *)
+	  let plus x y = x + y in
+	  fold plus x 0
+	;;
+
+	let length2 x = (* computes the same answer as length *)
+	  let add1 _ x = 1+x in
+	  fold add1 x 0
+	;;
+
+	length2 [1;2;3] = length [1;2;3];;
+	sum2 [1;2;3] = sum [1;2;3];;
+
+
+
+
+
+
+### Fold examples
+
+Calculate the sum of a list
+
+	let sum (l : int list) : int =
+	  fold_left (fun acc x -> acc + x) 0 l
+Concatenate a string list into one string
+ 	
+  	let concat (l : string list) : string =
+	  fold_left (fun acc x -> acc ^ x) "" l
+
+
+Range 
+
+	let add a b =a + b;;
+
+	let rec range a b = 
+		if a >b then [] else a::range (a+1) b;;
+
+	let r = range 5 10;;
+	
+	fold (+) 0 r;;
+
+Another example for fold: Length of a list
+
+	let next (a,_)=a+1;;
+	fold (next, 0, [1;2;3;4;6]);;
+
+
+calculate the average grade
+
+	let grades = [80;90;70;60];;
+
+	let avg l =
+		let sum = fold (fun x y->x+y) l 0
+		in let rec length l =
+			match l with
+			|[]->0
+			|h::t->1+length t
+		in (sum / (length l))
+	;;
+
+	let v = avg grades;;
+	print_string("Average grade:");;
+	print_int v;;
+	print_string("\n");;
+
+
+
+Collect all even numbers in the list
+
+		fold (fun x y->if (y mod 2) = 0 then y::x else x) [] [1;2;3;4;5;6];;
+		- : int list = [6; 4; 2]
+
+Find max/min from a list
+	
+	let maxof2 a b= if a > b then a else b;;
+
+	let max2 lst =
+  		match lst with
+   		 []->failwith "empty list"
+   		|h::t-> fold maxof2 h t
+	;;
+	val max2 : 'a list -> 'a = <fun>
+	max [3;10;5];;
+	- : int = 10
+
+	
+	(*  max [3;10;5]
+      fold maxof2 3 [10:5]
+      fold maxof2  10  [5]
+      fold maxof2 10 []
+      10
+ 	*)    
+	
+
+	</xmp>
+<script src="../js/strapdown.js"></script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>

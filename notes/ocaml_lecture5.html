@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+	<title>OCaml Lecture Notes</title>
+<link rel="stylesheet" href="../bootstrap-3.3.7-dist/css/bootstrap.min.css">
+</head>
+<body>
+<xmp>
+
+
+
+
+
+
+## data type
+
+	option
+		type 'a option = 
+			Some of 'a
+		  | None
+		;;
+
+
+ get the head of a list
+ 
+		let hd lst = 
+			match lst with
+			|[]->None
+			|h::_->Some h
+		;;
+
+
+shape
+
+		type shape =
+			Rect of float * float (* wid*len *)
+		  | Circle of float       (* radius  *)
+
+		let area x = match x with
+		  Rect (w, l) -> w *. l
+		| Circle r -> r  *. r *. 3.14
+
+		let unit_circle = Circle 1.0
+		;;
+
+		area unit_circle;;
+
+
+
+polymorphic list
+
+		type gen = Int of int |Str of string;;
+
+		let l = [Int 10; Str "alice"; Int 30; Str "bob"];;
+
+print the generic list. We can use map to print the list
+
+	let print_gen x = 
+		match x with				
+			|Int i->print_int i;print_string "\n"
+			|Str s->print_string s;print_string "\n"
+	;;
+
+	List.map print_gen l;;
+
+
+
+#### Expression 
+
+
+	let rec power x y=
+		if(y <= 1 ) then x else x * power x (y-1)
+		;;
+	
+	type expr = 
+		Num of int
+		| Add of expr * expr
+		| Sub of expr * expr
+		| Mul of expr * expr
+		|Div of expr * expr
+		|Power of expr * expr
+	;;
+
+	let rec eval e =
+		match e with
+			Num x -> x
+			| Add (e1 ,e2) -> eval e1 + eval e2
+			| Sub (e1, e2) -> eval e1 - eval e2
+			|Mul (e1, e2) -> eval e1 * eval e2
+			|Div (e1, e2) -> eval e1 / eval e2
+			|Power (e1, e2) -> power (eval e1) (eval e2)
+	;;
+
+	eval (Add (Num 5,  Power(Mul (Num 4, Num 3), Num 2)));;
+	returns 5+(4*3)^2 = 149
+			
+
+
+####  list
+
+	type 'a my_list =
+		Nil
+	  | Cons of 'a * 'a my_list;;
+
+length of the list
+	
+	let rec len = function
+		Nil -> 0
+	  | Cons (_, t) -> 1 + (len t);;
+
+
+	len (Cons (10, Cons (20, Cons (30, Nil))));;
+
+creat my_list from a list
+
+	let rec my_list_of_list (ls : 'a list) : 'a my_list = 
+		match ls with
+		[] -> Nil
+	  | h::t -> Cons(h, (my_list_of_list t));;
+
+	let ol = my_list_of_list [1;2;3;4];;
+
+sum of a my_list
+
+	let rec list_sum l = 
+		match l with 
+		|Nil->0	(* we had None ->0 in class. That does not work. *)
+		|Cons(y,t)->y + (list_sum t);;
+	
+
+	let m = list_sum ol;;
+
+	let c = Cons(10,Cons(20,Cons(30,Nil)));;
+	print_int (list_sum c);;
+
+#### Binary Tree
+	
+	type 'a binary_tree =
+		| Empty
+		| Node of 'a * 'a binary_tree * 'a binary_tree;;
+	let example_tree =
+		Node('a', Node('b', Node('d', Empty, Empty), Node('e', Empty, Empty)),
+			 Node('c', Empty, Node('f', Node('g', Empty, Empty), Empty)));;
+
+Count the number of node
+
+	let rec count tree = 
+		match tree with
+		Empty->0
+		|Node(a,b,c)->1+count(b)+count(c);;
+
+Coune the number of leaves
+
+	let rec count_leaves = function
+		| Empty -> 0
+		| Node(_, Empty, Empty) -> 1
+		| Node(_, l, r) -> count_leaves l + count_leaves r;;
+
+Collect values of leaf nodes in a list 
+
+	let rec leaves = function
+		| Empty -> []
+		| Node(c, Empty, Empty) -> [c]
+		| Node(_, l, r) -> leaves l @ leaves r;;
+
+Collect the internal nodes of a binary tree in a list
+
+	let rec internals = function
+		| Empty | Node(_, Empty, Empty) -> []
+		| Node(c, l, r) -> internals l @ (c :: internals r);;
+		
+Collect the nodes at a given level in a list
+
+	let rec at_level t l = match t with
+		| Empty -> []
+		| Node(c, left, right) ->
+		   if l = 1 then [c]
+		   else at_level left (l - 1) @ at_level right (l - 1);;
+
+## Operator overloaing
+
+Overloading -- operator
+
+	let (--) i j =
+	  let rec from i j l =
+		if i>j then l
+		else from i (j-1) (j::l)
+		in from i j []
+
+	let longlist = 0 -- 1_000_000
+
+
+	List.fold_left (+) 0 l;;
+	- : int = 500000500000
+	# List.fold_right (+) l 0;;
+	Stack overflow during evaluation (looping recursion?).
+
+
+
+## closure
+
+	let f x y = x+y;;
+	let f = fun x - (fun y-> x+y);;
+
+	let f x y = fun z -> z + x + y;;
+	let g1 = f 10 20;;
+	g1 : int = 30
+
+	let g2 = f2 10 20;;
+	g2 : int -> int = <fun>
+
+g2 is a function closure, which has code fun z->z+x+y and environment (x=10,y=20)
+
+
+	g2 30;;
+	- : int = 60
+
+	
+Java Example
+
+	public class Test{
+		public void doSomething(){
+			int a = 10;	// runnable needs a later. "a" is effectively final. 
+			Runnable runnable = new Runnable(){
+				public void run(){
+					 int b = a + 1;
+					 System.out.println(b);
+				}
+			};
+			//runnable.run();
+			(new Thread(runnable)).start();
+			//a = 100;		//"a" is effectivelu final. updating "a" violates it.
+		}
+
+		public static void main(String[] args){
+			Test t = new Test();
+			t.doSomething();
+		}
+	}
+
+
+Closure example:
+					
+		(* what is the type of this function? *)
+	let add_n n =
+	  let f x = 
+		print_string "this is my message\n";
+		x+n in
+	  f 
+	;;
+	(* What does this do? What is its type? *)
+	let add5 x = add_n 5 x;;
+
+	(* value? *)
+	let x = add5 6;;
+
+	print_string "outer call: ";
+	print_int x;;
+	print_string "\n";;
+
+Can we do the same thing in C?  See https://gcc.gnu.org/onlinedocs/gcc/Nested-Functions.html
+	
+	#include <stdio.h>
+
+	typedef int (*intfp)(int);
+	intfp add_n(int n) {
+	  char buf[10] = "message";
+	  int f(int x) {
+		printf("this is my %s\n",buf);
+		printf("n=%d\n",n);
+		printf("x=%d\n",x);    
+		return x+n;
+	  }
+	  return f;
+	}
+
+	int add5(int x) {
+	  intfp fp = add_n(5);
+	  return fp(x);
+	}
+
+	int main(int argc, char *argv[]) {
+	  int x = add5(6);
+	  printf("outer call: %d\n",x);
+	  return 0;
+	}
+					
+
+GCC nested function extension:
+
+	/* see https://gcc.gnu.org/onlinedocs/gcc/Nested-Functions.html */
+	#include <stdio.h>
+
+	typedef int (*int_func)(int);
+
+	int_func f(int x) {
+	  int g(int y) {
+		return x + y;
+	  }
+	  return g;
+	}
+
+	int main() {
+	  int_func fp = f(2);
+	  int_func fp2 = f(3);
+	  printf("5 = %d? \n",(*fp)(3));
+	  printf("6 = %d? \n",(*fp2)(3));
+	}
+
+Compile it with GNU GCC, and see the output
+																
+												
+</xmp>
+
+<script src="../js/strapdown.js"></script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>

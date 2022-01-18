@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>Lecture Notes 1</title>
+<link rel="stylesheet" href="../bootstrap-3.3.7-dist/css/bootstrap.min.css">
+
+</head>
+
+<body>
+
+<xmp>
+# OCaml
+	
+Caml is a dialect of the ML programming language family, developed in France at INRIA. OCaml is the main implementation of the programming language Caml. The features of ML include:
+
+- First-class functions
+	- Functions can be data, too: parameters and return values
+- Favor immutability (“assign once”)
+- Data types and pattern matching
+	- Convenient for certain kinds of data structures
+- Type inference
+	- No need to write types in the source language
+		- But the language is statically typed
+	- Supports parametric polymorphism
+		- Generics in Java, templates in C++
+- Exceptions
+- Garbage collection
+
+### Working with OCaml
+  
+- OCaml programs can be compiled using ocamlc
+	- Produces .cmo (“compiled object”) and .cmi (“compiled interface”) files
+	- Use -o to set output file name
+	- Use -c to compile only to .cmo/.cmi and not to link
+- Can also compile with ocamlopt
+	- Produces .cmx files, which contain native code
+	- Faster, but not platform-independent (or as easily debugged)
+
+hello.ml:
+  
+	(* A small OCaml program *)
+	print_string "Hello world!\n";;
+
+To compile and run
+
+	ocamlc hello.ml
+	./a.out
+	Hello world!
+
+### Working with multiple files
+
+ main.ml
+ 
+ 	let main () =
+  		print_int (Util.add 10 20);
+  		print_string "\n"
+
+	let () = main ()
+
+util.ml
+
+ 	 let add x y = x+y
+Compile and run:
+
+    ocamlc util.ml main.ml
+
+Or compile separately
+	
+	ocamlc –c util.ml
+	ocamlc util.cmo main.ml
+
+To execute
+
+	./a.out
+
+Use ocamlbuild to compile larger projects and automatically. OCamlbuild finds dependencies. To build a bytecode executable out of main.ml and its local dependencies
+	
+	ocamlbuild main.byte
+
+The executable main.byte is in _build folder. To execute:
+	
+ 	./main.byte
+
+OCaml topleve, a REPL for OCaml
+  
+     ocaml
+	     OCaml version 4.04.0
+	# print_string ”Hello world!\n";;
+    	Hello world!
+     - : unit = ()
+	
+To load a file into top level:
+	
+	#use “filename.ml”
+
+	
+To exit the top-level,  type ^D (Control D) or call the exit 0
+	# exit 0;;
+
+
+### First OCaml Example  
+
+	(* A small OCaml program (* with nested comments *) *)
+	let x = 37;;
+	let y = x + 5;;
+	print_int y;;
+	print_string "\n";;
+
+
+OCaml is strictly typed
+
+	print_int 10;;
+		10- : unit = ()
+Following expressions do not type check
+		
+	print_int 10.5;;
+		Error: This expression has type float but an expression was expected of type int
+    
+    1 + 0.5;;
+		Error: This expression has type float but an expression was expected of type int
+                   
+	print_int "This function expected an int";;
+		Error: This expression has type string but an expression was expected of type int
+
+
+	1 + true;;
+		Error: This expression has type bool but an expression was expected of type int
+ 
+
+### if statement
+	
+	if e1 then e2 else e3
+Type checking rules
+	
+	- if e1 : bool and e2 : t and e3 : t then 
+		- if e1 then e2 else e3 : t
+Examples:
+			
+ 	if 7 > 42 then "hello" else "goodbye";;
+		- : string = "goodbye"
+
+
+	if 7 > 42 then "hello" else 10;;
+		Error: This expression has type int but an expression was expected of type string
+
+An expression is a value
+
+	print_int (if 10>5 then 100 else 200);;
+	100- : unit = ()
+
+### Functions
+
+We use let to define a function:
+
+Factorial function:
+
+	let rec fact n =
+ 	 if n = 0 then
+     	1
+  	else
+     	n * fact (n-1);;
+
+Next integer
+
+	let next x = x + 1;;
+
+Swapping two values
+	
+	let swap (x,y) = (y,x);;
+
+Adding two integers
+	
+	let add x y = x + y;;
+	
+Comparing other types
+
+	let eq (x,y) = x = y;; (* = is polymorphic *)
+
+### Function types:  
+-> (arraow) is the function type constructor
+
+	let next x = x + 1;;
+		val next : int -> int = <fun>
+
+	let fn x = (int_of_float x) * 3;;
+		val fn : float -> int = <fun>
+		
+	fact;;
+	 - : int -> int = <fun>
+
+### Calling Functions
+
+ 	let rec fact n =
+  		if n = 0 then
+  			1
+  		else
+     		n * fact (n-1)
+
+	fact 2 
+	if 2=0 then 1 else 2*fact(2-1)
+	2 * fact 1
+	2 * (if 1=0 then 1 else 1*fact(1-1))
+	2 * 1 * fact 0
+	2 * 1 * (if 0=0 then 1 else 0*fact(0-1))
+	2 * 1 * 1
+	2
+
+### Type annotations
+  
+    let (x : int) = 3;;
+		val x : int = 3
+    
+    let fn (x:int):float = (float_of_int x) *. 3.14;;
+		val fn : int -> float = <fun>
+		
+### List
+An OCaml list is an immutable, finite sequence of elements of the same type. List is a primitive data type
+	
+	[1;2;3];;     
+ 
+Nested lists
+
+	[ [1;2]; [3;4] ]
+
+empty list
+
+	[];;             
+
+What are the types of the above lists?
+
+	[1;2;3];;    
+		- : int list = [1; 2; 3]
+
+	[ [1;2]; [3;4] ];;
+		- : int list list = [[1; 2]; [3; 4]]
+
+	[];; 
+		- : 'a list = []
+		
+### Constructing lists
+OCaml lists can be constructed using :: notation. 
+
+	3 :: [];;
+		- : int list = [3]
+		
+	2 :: (3 :: []);;
+		- : int list = [2; 3]
+
+	1::2::3::[];;
+		- : int list = [1; 2; 3]
+
+
+### Type checking rules
+
+	if e1 : t and e2 : t list then e1::e2 : t list
+
+Example:
+
+	let x = [1;2;3];;
+	let y = 4 :: x;;
+	val y : int list = [4; 1; 2; 3]
+
+	let y = x :: 4;;   (* does not work; "A :: B" means that  B should be a list containing whatever type A is *)
+
+
+
+More list type practice
+
+	[[[]; []; [1.3;2.4]]];;
+		- : float list list list = [[[]; []; [1.3; 2.4]]]
+
+	[1; 2; "lists must be homogeneous"];;
+		Error: This expression has type string but an expression was expected of type
+         int
+
+	[1, 2, 3];;  (* probably not what you expect; this list has _one_ element *)
+		(int * int * int) list = [(1, 2, 3)]
+[1, 2, 3] is same as [(1,2,3)], a list of 3-tuple with type (int \* int \* int).
+
+	[1;2] :: 3   (* expects a list on the right of :: *)
+
+	Error: This expression has type int but an expression was expected of type
+         int list list
+         
+
+</xmp>
+<script src="../js/strapdown.js"></script>
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+
+</html>
+
+
