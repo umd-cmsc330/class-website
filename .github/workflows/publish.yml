@@ -1,0 +1,23 @@
+name: Publish Website
+on:
+  push:
+    branches: [main]
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: copy file via ssh key
+      uses: appleboy/scp-action@master
+      env:
+        HOST: junkfood.cs.umd.edu
+        USERNAME: ${{ secrets.USERNAME }}
+        #add the "username" to SECRETS
+        PORT: 22
+        KEY: ${{ secrets.KEY }}
+        #add the "ssh_private" to SECRETS
+      with:
+        source: "./"
+        target: "/fs/www/class/spring2022/cmsc330"
+        strip_components: 1
