@@ -15,7 +15,7 @@ jobs:
         USERNAME: ${{ secrets.USERNAME }}
         #add the "username" to SECRETS
         PORT: 22
-        KEY: ${{ secrets.KEY }}
+        PASSWORD: ${{ secrets.PASSWORD}}
         #add the "ssh_private" to SECRETS
       with:
         source: "./"
